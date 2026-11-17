@@ -1,5 +1,5 @@
 name: Periderm
-description: Scan every pull request for leaked secrets, missing auth, silent failures, runaway API costs and legal gaps. One comment per PR.
+description: Checks every pull request for leaked keys, open routes, runaway API costs and legal gaps. One comment per PR.
 author: Periderm
 branding:
   icon: shield
