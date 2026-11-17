@@ -1,0 +1,56 @@
+name: Periderm
+description: Scan every pull request for leaked secrets, missing auth, silent failures, runaway API costs and legal gaps. One comment per PR.
+author: Periderm
+branding:
+  icon: shield
+  color: orange
+
+inputs:
+  token:
+    description: Periderm CI token. Not needed for public repositories. Private repositories need a Team or Business plan.
+    required: false
+    default: ""
+  github-token:
+    description: Token used to post the pull request comment.
+    required: false
+    default: ${{ github.token }}
+  fail-on:
+    description: Fail the job when a finding at or above this severity exists (critical, high, medium, never).
+    required: false
+    default: critical
+  comment:
+    description: Post or update one pull request comment with the result.
+    required: false
+    default: "true"
+  working-directory:
+    description: Folder to scan, relative to the repository root.
+    required: false
+    default: "."
+  version:
+    description: periderm-cli version to install.
+    required: false
+    default: latest
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - name: Install Periderm
+      shell: bash
+      run: npm install -g "periderm-cli@${{ inputs.version }}" --no-fund --no-audit --loglevel=error
+
+    - name: Scan
+      shell: bash
+      env:
+        PERIDERM_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        PERIDERM_FAIL_ON: ${{ inputs.fail-on }}
+        PERIDERM_COMMENT: ${{ inputs.comment }}
+        PERIDERM_DIR: ${{ inputs.working-directory }}
+      run: |
+        args=(ci --fail-on "$PERIDERM_FAIL_ON" --dir "$PERIDERM_DIR")
+        if [ "$PERIDERM_COMMENT" != "true" ]; then args+=(--no-comment); fi
+        periderm "${args[@]}"
